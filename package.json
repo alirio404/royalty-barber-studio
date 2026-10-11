@@ -1,0 +1,33 @@
+{
+  "name": "royalty-barber-studio",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Plataforma web de reservas para Royalty Barber Studio",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "predev": "node restaurar-estructura.mjs",
+    "dev": "next dev",
+    "prebuild": "node restaurar-estructura.mjs",
+    "build": "next build",
+    "start": "next start",
+    "pretypecheck": "node restaurar-estructura.mjs",
+    "typecheck": "tsc --noEmit",
+    "pretest:rules": "node restaurar-estructura.mjs",
+    "test:rules": "node --test tests/*.test.mjs"
+  },
+  "dependencies": {
+    "@supabase/ssr": "0.12.7",
+    "@supabase/supabase-js": "2.117.3",
+    "next": "16.4.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "22.19.1",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "typescript": "5.9.3"
+  }
+}

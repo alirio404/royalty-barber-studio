@@ -1,0 +1,9 @@
+# Public browser config: safe to expose, protected by database RLS.
+NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=YOUR_SUPABASE_PUBLISHABLE_KEY
+
+# Server-only secret. Never use NEXT_PUBLIC_ with this key.
+SUPABASE_SERVICE_ROLE_KEY=YOUR_SUPABASE_SECRET_KEY
+
+# Required when setting the first administrator. Leave unset until configured securely.
+# INITIAL_ADMIN_EMAIL=owner@example.com
