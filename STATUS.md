@@ -1,44 +1,48 @@
 # Estado verificable de Royalty Barber Studio
 
-**Corte:** 10 de octubre de 2026. **Estado:** fase de base técnica; todavía no es un sitio de producción. Se eligió Netlify como alojamiento previsto, Supabase para datos/autenticación/almacenamiento y GitHub para el código; Cloudflare queda opcional para DNS/protección cuando haya dominio.
+**Corte:** 13 de octubre de 2026. **Estado:** estabilización de seguridad en curso; no está aprobado para producción.
 
-## Qué está escrito en el código
+## Estado remoto verificado
 
-- Web pública responsive con identidad negra, roja y dorada, tipografía condensada, estética streetwear/Y2K y navegación por páginas.
-- Catálogo, equipo y galería conectados a consultas de datos reales; no se siembran tarifas de ejemplo ni fotos falsas.
-- Registro, inicio/cierre de sesión y recuperación de contraseña con Supabase Auth.
-- Flujo de reservas que exige cuenta, consulta disponibilidad en PostgreSQL, registra solicitudes `SOLICITADA` y muestra el código de seguimiento.
-- Validación de horarios y antelación en servidor, restricción de base de datos contra dos citas simultáneas para el mismo barbero y bloqueo de pausas que colisionen con citas activas.
-- Panel ADMIN para servicios, perfiles, asignaciones, horarios, excepciones, bloqueos, solicitudes, anotaciones manuales de pagos externos, datos del negocio y galería privada.
-- RLS, funciones con permisos restringidos y un flujo de alta inicial de ADMIN limitado a un correo verificado configurado en el servidor.
+- **GitHub:** `alirio404/royalty-barber-studio`, repositorio público, rama principal `main`, HEAD `776f05c6ed7f13f3246701d53a3b9835d5d73396` (`Add files via upload`, 11 de octubre de 2026). Hay un PR abierto #1. Las operaciones de lectura funcionan; la integración conectada devuelve HTTP 403 al intentar escribir ramas o archivos.
+- **Supabase:** proyecto `royalty-barber-studio`, ref `kyhuihtuihwpkftfbxvo`, estado `ACTIVE_HEALTHY`, región `sa-east-1`, PostgreSQL 17.11. Este proyecto ya existe y contiene migraciones; no crees otro ni ejecutes `database/setup.sql` sobre él.
+- **Migración de seguridad aplicada:** `20261013110404 fase1_restrict_available_slots_execute`.
+- **Configuración comercial:** `business_settings.is_published = false`; cero servicios, cero horarios y cero citas; no hay barberos publicados. El negocio permanece cerrado a reservas online.
 
-## Comprobaciones ejecutadas en este entorno
+## Corrección de seguridad verificada
 
-- `node --test tests/*.test.mjs`: **3/3 pruebas unitarias puras aprobadas** (parseo de horas, solapamiento de intervalos y límites de horario).
-- Análisis sintáctico TypeScript/TSX/MTS: **42 archivos analizados, 0 errores de sintaxis**.
-- Revisión de imports locales: **0 rutas de import local sin resolver**.
-- No hay un archivo `.env` con credenciales en este paquete; `.env.example` contiene solo valores de ejemplo.
+El asesor de seguridad encontró que `public.get_available_slots(uuid, uuid, date)` era `SECURITY DEFINER` y podía ejecutarse desde `anon` y `authenticated`. La función solo necesita ser invocada por el backend con `service_role`.
 
-## Comprobaciones que todavía NO se han podido ejecutar
+Se aplicó una migración que revoca esos permisos y añade una comprobación de privilegios. Consulta de solo lectura posterior:
 
-- `npm install`, creación de `package-lock.json`, `npm run typecheck` con las dependencias reales y `npm run build`.
-- Ejecución de `database/setup.sql` contra un proyecto Supabase nuevo, vacío y aislado.
-- Pruebas end-to-end en una URL real, pruebas de entrega de correo, concurrencia de reservas, RLS como cada rol, restauración de backups y revisión final de seguridad.
-- `npm run build` y despliegue a Netlify. La cuenta tiene dos sitios de nombre aleatorio, ambos con acceso SSO de equipo, que no se reutilizarán; aún no existe un sitio de Royalty conectado a este código.
+- `anon_can_execute = false`
+- `authenticated_can_execute = false`
+- `service_role_can_execute = true`
 
-El registro de paquetes no respondió desde el entorno de preparación; por eso no es honesto presentar la revisión sintáctica como si fuera una compilación de producción. No existe un `package-lock.json` inventado.
+El asesor de seguridad posterior ya no reporta la ejecución pública de esa función. Queda un aviso informativo: `public.dev_log` tiene RLS activado y no tiene políticas; por tanto, sus filas quedan denegadas por RLS. No se abrió acceso a esa tabla.
 
-## Bloqueadores antes de producción
+## Pruebas y límites de esta fase
 
-1. Crear y autorizar un proyecto **nuevo** de Supabase. La organización disponible se identifica como `unelmlk-portal`; hay dos proyectos inactivos que no deben reutilizarse ni modificarse sin autorización explícita. El alta nueva puede generar costes y exige confirmación informada.
-2. Crear un repositorio privado propio en GitHub y conectarlo a Netlify. La conexión de GitHub no muestra repositorios accesibles y las herramientas conectadas no ofrecen crear un repositorio vacío.
-3. Confirmar con el propietario los datos comerciales: teléfono, dirección exacta, horarios, servicios, duración, precio, moneda, reglas de cancelación y confirmación.
-4. Recibir una biografía real y fotos con autorización de publicación.
-5. Configurar correo de autenticación y decidir el proveedor de notificaciones operativas. No se anuncian emails de citas que todavía no están implementados.
-6. Decidir pasarela de pago si se requieren cobros online. El módulo actual solo documenta movimientos realizados fuera de la web.
-7. Completar o aprobar expresamente dejar fuera del primer MVP un panel y acceso individual para cada barbero.
-8. Volver a comprobar las versiones y avisos de seguridad del framework y sus dependencias antes del despliegue; no publicar esta versión sin actualización y build verificada.
-9. Cloudflare está conectado, pero actualmente la cuenta no tiene zonas DNS ni proyectos de Pages, Workers o D1; R2 todavía no está habilitado. No crear recursos de Cloudflare sin un dominio/caso de uso definido.
-10. Completar `docs/acceptance-checklist.md` en una Deploy Preview y aprobar expresamente la puesta en producción.
+- **Aprobada:** aplicación de la migración remota (`{"success":true}`) y comprobación de los permisos efectivos.
+- **Aprobada:** lectura del estado comercial; no se publicaron datos ni se crearon citas.
+- **No ejecutadas en esta sesión:** `npm ci`, `npm run typecheck`, `npm run test:rules`, `npm run build`, pruebas E2E y pruebas de concurrencia. El acceso de red desde el contenedor falló al resolver `github.com`; no se descargó una copia local para ejecutar esos comandos.
+- En el historial de documentación previo se consignan 3/3 pruebas unitarias puras, pero no se volvieron a ejecutar durante esta fase. No se consideran una nueva aprobación.
+- No se verificaron correo real, pago, reserva extremo a extremo ni despliegue.
 
-**Ninguna cuenta real, cita real, correo, cobro ni despliegue de producción ha sido creado por este paquete.**
+## Sincronización pendiente con GitHub
+
+La base remota ya tiene la migración, pero el archivo correspondiente debe incorporarse al repositorio. El archivo que acompaña este estado es:
+
+`database__migrations__20261013110404_fase1_restrict_available_slots_execute.sql`
+
+Este repositorio conserva algunos archivos con nombres planos separados por `__`; `restaurar-estructura.mjs` los reconstruye como carpetas. Mantén ese patrón si subes el archivo desde la interfaz web de GitHub.
+
+## Bloqueadores antes de aprobar la fase
+
+1. Subir el archivo de migración a GitHub y verificar que su contenido coincide con el cambio ya aplicado en Supabase.
+2. Recuperar conectividad al registro npm y ejecutar instalación reproducible, typecheck, pruebas y build.
+3. Revisar el aviso residual de `public.dev_log` sin exponer la bitácora, y priorizar los hallazgos de rendimiento mediante migraciones revisadas.
+4. Confirmar y cargar los datos comerciales reales; mantener el negocio sin publicar hasta verificarlos.
+5. Completar pruebas de seguridad por rol, reservas concurrentes y aceptación en una preview real.
+
+**Estado de fase 1: EN CURSO.** La corrección de permisos está aplicada y verificada en Supabase, pero el archivo todavía debe sincronizarse manualmente en GitHub y no se ha aprobado la compilación ni el despliegue.

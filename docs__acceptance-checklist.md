@@ -1,63 +1,64 @@
 # Lista de aceptación preproducción — Royalty Barber Studio
 
-Marcar cada elemento solo después de probarlo en el entorno desplegado que corresponda. “Código escrito” no equivale a “prueba aprobada”.
+Marcar cada elemento solo después de probarlo en el entorno identificado. Código escrito no equivale a prueba aprobada.
 
 ## Infraestructura y publicación
 
-- [ ] Repositorio de GitHub de la barbería creado y bajo propiedad del negocio.
-- [ ] Sitio Netlify enlazado al repositorio correcto; Deploy Preview y URL de producción identificadas.
-- [ ] Proyecto Supabase nuevo, región aprobada, backups y acceso administrativo revisados.
-- [ ] Variables de entorno de los tres entornos configuradas sin exponer claves privadas.
-- [ ] `npm install`, lockfile committed, `npm run typecheck`, `npm run build` y pruebas completadas sin errores.
-- [ ] URLs permitidas de Auth y callback ajustadas para la web real.
-- [ ] SMTP transaccional propio y entrega de verificación/recuperación comprobadas.
-- [ ] SSL, dominio, redirects, logs, backups y procedimiento de rollback verificados.
+- [ ] Revisar que el repositorio `alirio404/royalty-barber-studio` tenga la privacidad y propiedad que desea el negocio.
+- [ ] Incorporar y revisar `database__migrations__20261013110404_fase1_restrict_available_slots_execute.sql`; confirmar que coincide con la migración ya aplicada en Supabase.
+- [ ] Identificar un sitio Netlify de Royalty conectado al repositorio correcto y registrar la URL de Deploy Preview.
+- [ ] Revisar backups, permisos administrativos y las migraciones del proyecto Supabase activo `kyhuihtuihwpkftfbxvo`.
+- [ ] No ejecutar `database/setup.sql` en la base existente; usar migraciones incrementales revisadas.
+- [ ] Configurar las variables de entorno sin exponer claves privadas.
+- [ ] Ejecutar instalación reproducible (`npm ci` con lockfile revisado), `npm run typecheck`, `npm run test:rules` y `npm run build`; guardar resultados reales.
+- [ ] Ajustar URL del sitio y callback permitido de Supabase Auth para cada entorno.
+- [ ] Configurar SMTP transaccional y probar verificación/recuperación de email.
+- [ ] Verificar SSL, dominio, redirects, logs, backups y procedimiento de rollback.
 
 ## Datos del negocio
 
 - [ ] Nombre comercial y logotipo aprobados.
-- [ ] Dirección y teléfono comprobados por el propietario.
-- [ ] Instagram oficial confirmado.
-- [ ] Horario por día y días feriados/pausas confirmados.
+- [ ] Dirección, teléfono e Instagram confirmados por el propietario.
+- [ ] Horario semanal y excepciones confirmados.
 - [ ] Cada servicio tiene nombre, descripción, duración, precio y moneda aprobados.
-- [ ] Cada servicio está asignado al barbero correcto y solo los perfiles reales están activos.
-- [ ] Biografías, fotos y galería tienen autorización de publicación.
-- [ ] Política de confirmación de citas aprobada.
-- [ ] Política de cancelación/reprogramación y antelación aprobada.
-- [ ] Forma de cobro definida; si no hay pasarela, el texto público aclara que el pago no se procesa online.
+- [ ] Servicios asignados a los barberos correctos; perfiles reales revisados.
+- [ ] Biografías, fotografías y galería autorizadas para publicación.
+- [ ] Políticas de confirmación, cancelación y reprogramación aprobadas.
+- [ ] El método de pago está definido y la web deja claro si no procesa pagos online.
 
 ## Pruebas de cliente
 
-- [ ] Registrar una cuenta, confirmar el email, iniciar sesión y cerrar sesión.
-- [ ] Solicitar recuperación de contraseña, usar el enlace y crear una contraseña nueva.
-- [ ] Probar un servicio publicado y uno que no esté publicado; los borradores no deben ser visibles.
-- [ ] Consultar disponibilidad en fecha futura, fecha cerrada, bloqueo y excepción de horario.
-- [ ] Intentar reservar un hueco que ya no está libre; no debe crearse una cita duplicada.
-- [ ] Probar dos solicitudes simultáneas para el mismo barbero/hueco: como máximo una se guarda.
-- [ ] Comprobar código público, importe y duración guardados como instantánea.
-- [ ] Verificar que una cita queda SOLICITADA y no se presenta como confirmada sin aprobación.
-- [ ] Verificar que un cliente solo vea sus propias citas y no pueda editar el precio, barbero ni hora por petición manipulada.
-- [ ] Probar cancelación en el plazo permitido y fuera de él.
-- [ ] Probar en móvil, escritorio, teclado y `prefers-reduced-motion`.
+- [ ] Registrar una cuenta, verificar el email, iniciar sesión y cerrar sesión.
+- [ ] Recuperar contraseña mediante un email real de prueba y crear una nueva contraseña.
+- [ ] Confirmar que servicios/perfiles en borrador no son visibles al público.
+- [ ] Consultar disponibilidad en fechas futuras, días cerrados, excepciones y bloqueos.
+- [ ] Intentar reservar un hueco ocupado y confirmar que no se crea una cita duplicada.
+- [ ] Enviar dos solicitudes concurrentes para el mismo barbero y horario; como máximo una debe guardarse.
+- [ ] Verificar código de cita, duración e importe como instantáneas de la solicitud.
+- [ ] Comprobar que la solicitud permanece `SOLICITADA` hasta que el negocio la apruebe.
+- [ ] Confirmar que un cliente solo ve sus propias citas y no puede alterar precios, barbero ni hora manipulando la petición.
+- [ ] Probar cancelación dentro y fuera del plazo permitido.
+- [ ] Probar en móvil/escritorio, solo teclado y `prefers-reduced-motion`.
 
 ## Pruebas de administración y seguridad
 
-- [ ] Una cuenta CLIENT no puede abrir rutas ni APIs de ADMIN.
-- [ ] Solo el correo inicial verificado puede obtener el primer ADMIN; el bootstrap no vuelve a promover otros usuarios.
-- [ ] ADMIN puede crear/editar/desactivar servicios y barberos, y gestionar relaciones servicio-barbero.
-- [ ] ADMIN puede cambiar horarios, excepciones y bloqueos; la disponibilidad cambia de inmediato.
-- [ ] ADMIN puede confirmar/cancelar/avanzar citas respetando las transiciones operativas.
-- [ ] Registro de pagos no realiza cobros ni marca pagos automáticamente.
-- [ ] Imágenes privadas no son accesibles de forma permanente sin autorización; las URLs firmadas expiran.
-- [ ] RLS está activado en todas las tablas expuestas y se han probado las políticas con anon, CLIENT, BARBER y ADMIN.
-- [ ] No existe clave service_role en bundle cliente, HTML, repositorio, source map ni logs públicos.
-- [ ] Datos personales de un cliente no aparecen en rutas o respuestas públicas.
-- [ ] Backups y restauración se han probado; logs de auditoría para cambios sensibles están presentes.
+- [ ] Un usuario CLIENT no puede abrir páginas ni APIs de ADMIN.
+- [ ] Solo la cuenta con correo inicial verificado puede convertirse en el primer ADMIN; repetir bootstrap no eleva a otros usuarios.
+- [ ] ADMIN puede crear/editar/desactivar servicios y perfiles y gestionar sus asignaciones.
+- [ ] Cambiar horarios, excepciones y bloqueos actualiza la disponibilidad.
+- [ ] Cambiar estados de cita respeta las transiciones operativas.
+- [ ] Registrar un movimiento externo de pago no realiza un cobro ni marca un pago automáticamente.
+- [ ] Imágenes privadas requieren autorización; las URL firmadas expiran.
+- [ ] RLS y políticas probadas como anon, CLIENT, BARBER y ADMIN.
+- [ ] Verificación de `get_available_slots`: `anon` y `authenticated` no tienen EXECUTE; `service_role` sí.
+- [ ] No hay `service_role` en bundles cliente, HTML, repositorio ni logs públicos.
+- [ ] Datos personales no aparecen en respuestas públicas.
+- [ ] Backups/restauración probados y cambios sensibles presentes en auditoría.
 
 ## Resultado
 
-- Fecha de la prueba:
-- URL de preview/producción probada:
-- Persona que prueba:
+- Fecha de prueba:
+- Entorno / URL comprobado:
+- Persona responsable:
 - Incidencias abiertas:
-- Decisión explícita de publicar:
+- Decisión explícita de publicación:

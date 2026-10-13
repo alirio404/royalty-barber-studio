@@ -1,66 +1,55 @@
 # Royalty Barber Studio — plataforma web
 
-**Estado: base técnica en construcción; NO desplegada y NO lista para atender clientes.** Este repositorio no debe presentarse como una web de producción. La integración real depende de un proyecto nuevo de Supabase, sus credenciales, la configuración de correo y la publicación de información verificada. Las rutas sin backend no generan cuentas, citas, horas disponibles ni pagos ficticios.
+**Estado: fase de estabilización técnica; NO aprobada para producción.** El repositorio es `alirio404/royalty-barber-studio`. Existe un proyecto Supabase activo asociado al negocio y su esquema ya tiene migraciones; no crees otra instancia ni ejecutes el script inicial sobre la base existente.
 
-## Qué incluye esta base
+La comprobación del 13 de octubre de 2026 encontró que el negocio está sin publicar, con cero servicios, cero horarios, ningún barbero publicado y cero citas. No se debe aceptar ni anunciar reservas reales hasta verificar los datos comerciales y completar las pruebas.
 
-- Web pública responsive con la identidad Royalty: negro/rojo, oro, tipografía condensada, estética streetwear/Y2K y detalles animados.
-- Catálogo y perfiles obtenidos de PostgreSQL; los borradores no se muestran como datos oficiales.
-- Registro e inicio de sesión con Supabase Auth, confirmación por correo y flujo de recuperación de contraseña (requiere correo SMTP y URL de redirección configurados).
-- Flujo de reservas para clientes con cuenta: consulta de huecos en PostgreSQL, solicitud con código de seguimiento, estado pendiente, historial y cancelación sujeta a reglas del negocio.
-- Panel de administración con catálogo, perfiles, horarios, excepciones, bloqueos, solicitudes, registro manual de cobros/reembolsos externos, ajustes del negocio y galería privada.
-- Esquema inicial PostgreSQL, roles, políticas RLS, restricciones anti-solapamiento, registro de auditoría y almacenamiento privado para fotografías.
-- Valores provisionales no sembrados como precios reales. Emmanuel Rose aparece como borrador sin biografía inventada ni fotografía falsa. Luis Vazques no se incluye como integrante del equipo.
+## Funcionalidad del repositorio
 
-## Funciones deliberadamente no activadas
+- Next.js App Router, React y TypeScript.
+- Identidad visual Royalty en negro, rojo y oro, estética streetwear/Y2K, diseño responsive y controles de accesibilidad.
+- Catálogo, perfiles y galería conectados a consultas reales; los datos en borrador no se publican.
+- Supabase Auth para registro, inicio de sesión y recuperación de contraseña.
+- Solicitudes de reserva sujetas a validación de horarios y a restricciones de PostgreSQL para evitar solapamientos.
+- Panel ADMIN para servicios, equipo, horarios, excepciones, reservas, registros de pagos externos, datos del negocio y galería privada.
+- Políticas RLS y almacenamiento privado. La clave `SUPABASE_SERVICE_ROLE_KEY` solo se utiliza en el servidor.
 
-- No hay pasarela de pago ni cobro online. El panel de caja únicamente documenta movimientos que el negocio ya procesó fuera de la web.
-- No hay envíos de newsletters ni campañas. No se ha configurado proveedor de correo de producción ni sistema de consentimiento comercial.
-- OpenAI Platform no se integra en el MVP: no hace falta para los requisitos básicos de catálogo, autenticación y citas. Añadir IA sin un caso de uso definido añade coste y riesgos sin resolver una necesidad del negocio.
-- No hay imágenes de muestra publicadas. Se necesitan fotos reales y autorización para utilizarlas.
-- No hay cuentas de barbero/panel de barbero en esta primera entrega; la gestión de agenda queda en el panel ADMIN. Esto debe terminarse o aceptarse como alcance del MVP antes del lanzamiento si varios barberos necesitarán acceso individual.
+No se ha verificado una pasarela de pago, campañas de newsletter, notificaciones operativas por correo ni un panel individual de barbero en producción. No presentar esas capacidades como operativas.
 
-## Stack
+## Infraestructura verificada
 
-- Next.js App Router + React + TypeScript.
-- Supabase Auth, PostgreSQL, RLS y Storage privado.
-- Netlify como alojamiento principal, con previews y despliegue automático cuando se conecte el repositorio de GitHub. La configuración inicial está en `netlify.toml`.
-- GitHub para historial de código y revisión de cambios.
-- Cloudflare queda opcional para DNS/protección cuando el dominio del negocio esté definido y añadido a esa cuenta; no es necesario duplicar almacenamiento si Supabase Storage cubre las fotos.
+- **GitHub:** `alirio404/royalty-barber-studio`, rama `main`. El repositorio está marcado como público. La integración disponible permite leer pero devuelve HTTP 403 al escribir ramas o archivos.
+- **Supabase:** proyecto `royalty-barber-studio`, ref `kyhuihtuihwpkftfbxvo`, región `sa-east-1`, PostgreSQL 17.11, estado `ACTIVE_HEALTHY`.
+- **Netlify:** destino de alojamiento configurado en `netlify.toml`, pero no se ha verificado una URL de producción o preview conectada y funcionando.
 
-Dependencias principales fijadas en `package.json`; no se ha generado un lockfile porque el registro de npm no respondió desde el entorno de preparación. Debe generarse y revisarse con `npm install` antes de producción. El análisis sintáctico local de TypeScript/TSX pasó, y las pruebas puras de reglas de horario pasaron; no se pudo ejecutar `next build`, pruebas de integración ni pruebas con base real porque aún no existe una conexión a un proyecto Supabase nuevo.
+## Migraciones y seguridad
 
-## Puesta en marcha segura
+La migración remota `20261013110404 fase1_restrict_available_slots_execute` restringe `public.get_available_slots(uuid, uuid, date)` a `service_role` y al propietario PostgreSQL. Tras aplicarla se verificó: `anon_can_execute=false`, `authenticated_can_execute=false` y `service_role_can_execute=true`.
 
-1. **Crear un proyecto Supabase nuevo.** No reutilizar los proyectos inactivos existentes. Elegir la región según latencia, residencia de datos y condiciones de la cuenta.
-2. **Aplicar `database/setup.sql` una sola vez en el SQL Editor de la base nueva y vacía.** Este archivo crea el esquema inicial, políticas, triggers, restricciones y el bucket privado. No ejecutarlo sobre otro proyecto ni volver a ejecutarlo después de que se haya aplicado.
-3. **Configurar Supabase Auth.** Habilitar verificación por email, configurar SMTP propio, URL del sitio y URL permitida de callback (`/auth/callback`). Definir las URLs reales de producción y preview, no dejar placeholders.
-4. **Preparar el usuario administrador.** Guardar `INITIAL_ADMIN_EMAIL` como variable de entorno privada en Netlify. El propietario crea la cuenta con ese correo, verifica el correo e inicia sesión. El servidor solo promueve ese correo verificado si todavía no existe un administrador. No asignar el rol desde el navegador.
-5. **Crear/usar el repositorio de GitHub** y conectar ese repositorio a un sitio Netlify de tipo Next.js. Configurar las siguientes variables en los entornos de desarrollo, previews y producción donde corresponda:
-   - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
-   - `SUPABASE_SERVICE_ROLE_KEY` (**solo servidor, nunca `NEXT_PUBLIC_`**)
-   - `INITIAL_ADMIN_EMAIL` (servidor, durante el bootstrap inicial)
-6. **Crear una Deploy Preview de Netlify y ejecutar pruebas** antes de cualquier promoción a producción. No habilitar indexación hasta completar la lista de aceptación.
-7. Entrar como ADMIN y cargar manualmente: teléfono, servicios, precio y moneda, duración, perfiles y asignación de servicios, horario semanal, restricciones, fotos reales autorizadas. Publicar la configuración del negocio solo después de verificarlo todo.
-8. Probar autenticación, recuperación por email, reserva, dos solicitudes simultáneas para el mismo hueco, excepciones/bloqueos, cancelación dentro y fuera del margen, gestión de estados, privilegios y galería en móvil/escritorio.
-9. Retirar `INITIAL_ADMIN_EMAIL` de los entornos tras completar el alta inicial, si el flujo de bootstrap ya no se necesita. Mantener `SUPABASE_SERVICE_ROLE_KEY` únicamente como variable privada del servidor.
+El archivo que registra el cambio en el repositorio es `database__migrations__20261013110404_fase1_restrict_available_slots_execute.sql` (el repositorio codifica carpetas con `__` y `restaurar-estructura.mjs` las reconstruye).
+
+**No ejecutes `database/setup.sql` en el proyecto Supabase existente.** Es un esquema inicial pensado para una base nueva y vacía, no una migración de actualización.
 
 ## Variables de entorno
 
-Copia los nombres de `.env.example` en la configuración de variables de entorno del sitio Netlify. No compartas credenciales, tokens, la clave `service_role` ni archivos `.env` por chat, correo o repositorios. Los valores de ejemplo son placeholders, no credenciales válidas.
+Guarda los valores reales en el gestor de secretos del proveedor, nunca en el repositorio ni en el chat:
 
-## Pruebas disponibles
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY` — solo servidor; nunca `NEXT_PUBLIC_`.
+- `INITIAL_ADMIN_EMAIL` — variable de servidor necesaria solo durante el bootstrap inicial del administrador.
+
+Consulta `.env.example` (generado desde `punto-env.example`) para los placeholders; los valores del ejemplo no son credenciales válidas.
+
+## Comprobaciones antes de producción
 
 ```bash
-npm install
+npm ci
 npm run test:rules
 npm run typecheck
 npm run build
 ```
 
-`npm run test:rules` cubre el parser de horas, límites de intervalos y cierre de horario. No sustituye pruebas end-to-end ni comprobaciones de RLS en Supabase. Antes de producir se necesitan pruebas de integración y revisión de seguridad usando una instancia de desarrollo separada.
+Estos comandos deben ejecutarse realmente con un lockfile comprobado y dependencias instaladas. Durante la revisión del 13 de octubre, la conexión al repositorio desde el contenedor falló por resolución DNS de GitHub, por lo que no se declara un typecheck ni un build aprobado en esta fase.
 
-## Antes de llamarla “lista”
-
-Completar `docs/acceptance-checklist.md` y verificar cada caso en una preview real. Hasta entonces, no habilitar indexación, no imprimir el sitio como un resultado final de producción y no aceptar clientes reales en ella.
+Completa `docs/acceptance-checklist.md` en una preview identificada antes de publicar. Verifica correo, autenticación, RLS por rol, concurrencia, cancelación, horarios reales, dispositivos móviles y restauración de backups. No habilites la publicación comercial hasta que el propietario confirme dirección, teléfono, moneda, servicios, precios, duración, horarios, políticas, biografías y fotografías autorizadas.
